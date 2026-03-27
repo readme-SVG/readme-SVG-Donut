@@ -95,8 +95,8 @@ const createConfigFromQuery = (query = {}) => {
     profile: safeProfile,
     label: (query.label || DEFAULTS.label).slice(0, 40),
     chars: (query.chars || DEFAULTS.chars).slice(0, 32) || DEFAULTS.chars,
-    speedX: clampFloat(query.speedX, DEFAULTS.speedX, 0.1, 8),
-    speedY: clampFloat(query.speedY, DEFAULTS.speedY, 0.1, 8),
+    speedX: clampFloat(query.speedX, DEFAULTS.speedX, -8, 8),
+    speedY: clampFloat(query.speedY, DEFAULTS.speedY, -8, 8),
     animationSpeed: clampFloat(query.animationSpeed, DEFAULTS.animationSpeed, 0.1, 4),
     totalFrames: clampInt(query.frames, DEFAULTS.totalFrames, 8, 120),
     theme: query.theme === 'light' ? 'light' : 'dark',
@@ -198,7 +198,6 @@ const createRenderer = (cfg) => {
                   z0 = t;
                 }
 
-                plotPoint([x0, y0, z0], [x0 / S, y0 / S, z0 / S], b, z, charsCount);
                 plotPoint([x0, y0, z0], [x0 / S, y0 / S, z0 / S], b, z, charsCount);
               }
             }
