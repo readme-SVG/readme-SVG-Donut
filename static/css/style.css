@@ -56,7 +56,9 @@ input[type="range"] {
 }
 
 input[type="number"],
-input[type="text"] {
+input[type="text"],
+select,
+textarea {
     width: 100%;
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -64,6 +66,10 @@ input[type="text"] {
     padding: 5px;
     font-family: monospace;
     box-sizing: border-box;
+}
+
+textarea {
+    resize: vertical;
 }
 
 #workspace {

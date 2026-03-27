@@ -1,22 +1,30 @@
-# SVG Donut
+# SVG ASCII Animator
 
-Статический проект с анимированным ASCII/SVG donut-рендером и экспортом в `SVG`/`GIF`.
+A static project with animated ASCII/SVG rendering and export to `SVG` / `GIF`.
 
-## Деплой на Vercel
+## Features
 
-1. Залей проект в GitHub.
-2. В Vercel нажми `Add New -> Project` и выбери репозиторий.
-3. `Framework Preset`: `Other`.
-4. `Build Command`: оставить пустым.
-5. `Output Directory`: оставить пустой.
-6. Нажми `Deploy`.
+- Live animated ASCII rendering in SVG.
+- Multiple shape presets: `Donut`, `Square (Solid)`, `Square (Hollow)`, `Triangle`.
+- Adjustable animation speed slider.
+- Badge markdown output generator with one-click copy.
+- Export animation to `SVG` and `GIF`.
 
-Vercel автоматически раздаст `index.html` из корня проекта и папку `static/`.
+## Deploy to Vercel
 
-## Локальный запуск
+1. Push the project to GitHub.
+2. In Vercel, click `Add New -> Project` and select the repository.
+3. Set `Framework Preset` to `Other`.
+4. Leave `Build Command` empty.
+5. Leave `Output Directory` empty.
+6. Click `Deploy`.
+
+Vercel serves `index.html` from the repository root and the `static/` directory automatically.
+
+## Run Locally
 
 ```bash
 python3 -m http.server 4173
 ```
 
-Открой `http://localhost:4173`.
+Open `http://localhost:4173`.

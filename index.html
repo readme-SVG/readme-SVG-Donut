@@ -1,72 +1,94 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Transparent Looping Donut</title>
+    <title>Advanced Transparent Looping ASCII Renderer</title>
     <link rel="stylesheet" href="./static/css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="./static/js/main.js" defer></script>
 </head>
 <body>
     <div id="sidebar">
-        <h2 class="page-title">Настройки анимации</h2>
+        <h2 class="page-title">Animation Settings</h2>
 
-        <div class="section-title">Размер холста (px)</div>
+        <div class="section-title">Canvas Size (px)</div>
         <div class="control-group">
-            <label>Ширина <span id="val-width">600</span></label>
+            <label>Width <span id="val-width">600</span></label>
             <input type="number" id="inp-width" value="600" min="100" max="1200" step="10">
         </div>
         <div class="control-group">
-            <label>Высота <span id="val-height">400</span></label>
+            <label>Height <span id="val-height">400</span></label>
             <input type="number" id="inp-height" value="400" min="100" max="1200" step="10">
         </div>
 
-        <div class="section-title">Геометрия бублика</div>
+        <div class="section-title">Shape Presets</div>
         <div class="control-group">
-            <label>Толщина трубы (R1) <span id="val-r1">1</span></label>
+            <label>Profile</label>
+            <select id="inp-profile">
+                <option value="donut">Donut</option>
+                <option value="cube-solid">Square (Solid)</option>
+                <option value="cube-hollow">Square (Hollow)</option>
+                <option value="triangle">Triangle</option>
+            </select>
+        </div>
+
+        <div class="section-title">Donut Geometry</div>
+        <div class="control-group">
+            <label>Tube Thickness (R1) <span id="val-r1">1</span></label>
             <input type="range" id="inp-r1" value="1" min="0.1" max="3" step="0.1">
         </div>
         <div class="control-group">
-            <label>Радиус кольца (R2) <span id="val-r2">2</span></label>
+            <label>Ring Radius (R2) <span id="val-r2">2</span></label>
             <input type="range" id="inp-r2" value="2" min="0.5" max="5" step="0.1">
         </div>
         <div class="control-group">
-            <label>Растяжение по X <span id="val-scalex">30</span></label>
+            <label>X Stretch <span id="val-scalex">30</span></label>
             <input type="range" id="inp-scalex" value="30" min="5" max="100" step="1">
         </div>
         <div class="control-group">
-            <label>Растяжение по Y <span id="val-scaley">15</span></label>
+            <label>Y Stretch <span id="val-scaley">15</span></label>
             <input type="range" id="inp-scaley" value="15" min="5" max="100" step="1">
         </div>
 
-        <div class="section-title">Скорость вращения (обороты)</div>
+        <div class="section-title">Rotation Speed (turns per cycle)</div>
         <div class="control-group">
-            <label>Ось X (за цикл) <span id="val-speedx">2</span></label>
+            <label>X Axis (per cycle) <span id="val-speedx">2</span></label>
             <input type="range" id="inp-speedx" value="2" min="-5" max="5" step="1">
         </div>
         <div class="control-group">
-            <label>Ось Y (за цикл) <span id="val-speedy">1</span></label>
+            <label>Y Axis (per cycle) <span id="val-speedy">1</span></label>
             <input type="range" id="inp-speedy" value="1" min="-5" max="5" step="1">
         </div>
-
-        <div class="section-title">Символы</div>
         <div class="control-group">
-            <label>Текст по центру</label>
+            <label>Animation Speed <span id="val-animspeed">1</span></label>
+            <input type="range" id="inp-animspeed" value="1" min="0.25" max="4" step="0.25">
+        </div>
+
+        <div class="section-title">Characters</div>
+        <div class="control-group">
+            <label>Center Text</label>
             <input type="text" id="inp-label" value=" OstinUA ">
         </div>
         <div class="control-group">
-            <label>Палитра символов</label>
+            <label>Character Palette</label>
             <input type="text" id="inp-chars" value=".,-~:;=!*#$@">
         </div>
 
-        <div class="section-title">Экспорт</div>
-        <button id="download-svg-btn" class="action-btn">Скачать SVG</button>
-        <button id="download-gif-btn" class="action-btn">Скачать GIF</button>
+        <div class="section-title">Badge Output</div>
+        <div class="control-group">
+            <label>Badge Markdown</label>
+            <textarea id="badge-output" rows="3" readonly></textarea>
+        </div>
+        <button id="copy-badge-btn" class="action-btn">Copy Badge</button>
+
+        <div class="section-title">Export</div>
+        <button id="download-svg-btn" class="action-btn">Download SVG</button>
+        <button id="download-gif-btn" class="action-btn">Download GIF</button>
     </div>
 
     <div id="workspace">
-        <button id="theme-toggle" class="action-btn">Светлая тема</button>
+        <button id="theme-toggle" class="action-btn">Light Theme</button>
 
         <div id="container">
             <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
