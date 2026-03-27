@@ -318,11 +318,98 @@ const getFrameData = (A, B) => {
     return b;
 };
 
+const buildAnimatedSvgContent = (frames = cfg.totalFrames) => {
+    const safeFrames = Math.max(1, frames);
+    const frameStepSeconds = 0.02 / cfg.animationSpeed;
+    const duration = safeFrames * frameStepSeconds;
+    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${cfg.width}" height="${cfg.height}" viewBox="0 0 ${cfg.width} ${cfg.height}">\n`;
+
+    svgContent += `<style>
+            text {
+                font-family: monospace;
+                font-size: 12px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0px 0px 3px rgba(0,0,0,0.8);
+            }
+            .fr { opacity: 0; animation: play ${duration}s infinite; }
+            @keyframes play {
+                0%, 0.499% { opacity: 1; }
+                0.5%, 100% { opacity: 0; }
+            }
+        </style>\n`;
+
+    for (let f = 0; f < safeFrames; f++) {
+        const A = (f * Math.PI * 2 * cfg.speedX) / safeFrames;
+        const B = (f * Math.PI * 2 * cfg.speedY) / safeFrames;
+        const b = getFrameData(A, B);
+
+        let frameHTML = `<g class="fr" style="animation-delay: ${f * frameStepSeconds}s;">\n`;
+
+        for (let y = 0; y < cfg.rows; y++) {
+            const lineChars = [];
+            for (let x = 0; x < cfg.cols; x++) {
+                lineChars.push(b[x + y * cfg.cols]);
+            }
+
+            let rightIndex = cfg.cols - 1;
+            while (rightIndex >= 0 && lineChars[rightIndex] === ' ') {
+                rightIndex--;
+            }
+
+            if (rightIndex < 0) {
+                continue;
+            }
+
+            let rowHTML = `<text x="5" y="${y * 15 + 15}" xml:space="preserve">`;
+            let currentSpanColor = null;
+            let currentSpanText = '';
+
+            for (let x = 0; x <= rightIndex; x++) {
+                const char = lineChars[x];
+                const color = cfg.label.includes(char) && char !== ' ' ? '#3f88e6' : '#ccc';
+
+                let safeChar = char;
+                if (char === '<') {
+                    safeChar = '&lt;';
+                } else if (char === '>') {
+                    safeChar = '&gt;';
+                } else if (char === '&') {
+                    safeChar = '&amp;';
+                }
+
+                if (color !== currentSpanColor) {
+                    if (currentSpanText !== '') {
+                        rowHTML += `<tspan fill="${currentSpanColor}">${currentSpanText}</tspan>`;
+                    }
+                    currentSpanColor = color;
+                    currentSpanText = safeChar;
+                } else {
+                    currentSpanText += safeChar;
+                }
+            }
+
+            if (currentSpanText !== '') {
+                rowHTML += `<tspan fill="${currentSpanColor}">${currentSpanText}</tspan>`;
+            }
+
+            rowHTML += `</text>\n`;
+            frameHTML += rowHTML;
+        }
+
+        frameHTML += `</g>\n`;
+        svgContent += frameHTML;
+    }
+
+    svgContent += `</svg>`;
+    return svgContent;
+};
+
 const updateBadgeOutput = () => {
-    const badgeLabel = encodeURIComponent(cfg.label.trim() || 'ASCII');
-    const badgeProfile = encodeURIComponent(cfg.profile);
-    const url = `https://img.shields.io/badge/${badgeLabel}-${badgeProfile}-3f88e6`;
-    const markdown = `![${cfg.label.trim() || 'ASCII Badge'}](${url})`;
+    const rawAltText = cfg.label.trim() || 'ASCII Badge';
+    const altText = rawAltText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const badgeFrames = Math.min(cfg.totalFrames, 48);
+    const svgContent = buildAnimatedSvgContent(badgeFrames);
+    const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(svgContent)}`;
+    const markdown = `<img alt="${altText}" src="${dataUri}" />`;
     document.getElementById('badge-output').value = markdown;
 };
 
@@ -394,83 +481,7 @@ document.getElementById('download-svg-btn').onclick = () => {
     btn.disabled = true;
 
     setTimeout(() => {
-        const frameStepSeconds = 0.02 / cfg.animationSpeed;
-        const duration = cfg.totalFrames * frameStepSeconds;
-        let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${cfg.width}" height="${cfg.height}" viewBox="0 0 ${cfg.width} ${cfg.height}">\n`;
-
-        svgContent += `<style>
-            text {
-                font-family: monospace;
-                font-size: 12px;
-                text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0px 0px 3px rgba(0,0,0,0.8);
-            }
-            .fr { opacity: 0; animation: play ${duration}s infinite; }
-            @keyframes play {
-                0%, 0.499% { opacity: 1; }
-                0.5%, 100% { opacity: 0; }
-            }
-        </style>\n`;
-
-        for (let f = 0; f < cfg.totalFrames; f++) {
-            const A = (f * Math.PI * 2 * cfg.speedX) / cfg.totalFrames;
-            const B = (f * Math.PI * 2 * cfg.speedY) / cfg.totalFrames;
-            const b = getFrameData(A, B);
-
-            let frameHTML = `<g class="fr" style="animation-delay: ${f * frameStepSeconds}s;">\n`;
-
-            for (let y = 0; y < cfg.rows; y++) {
-                const lineChars = [];
-                for (let x = 0; x < cfg.cols; x++) {
-                    lineChars.push(b[x + y * cfg.cols]);
-                }
-
-                let rightIndex = cfg.cols - 1;
-                while (rightIndex >= 0 && lineChars[rightIndex] === ' ') {
-                    rightIndex--;
-                }
-
-                if (rightIndex < 0) {
-                    continue;
-                }
-
-                let rowHTML = `<text x="5" y="${y * 15 + 15}" xml:space="preserve">`;
-                let currentSpanColor = null;
-                let currentSpanText = '';
-
-                for (let x = 0; x <= rightIndex; x++) {
-                    const char = lineChars[x];
-                    const color = cfg.label.includes(char) && char !== ' ' ? '#3f88e6' : '#ccc';
-
-                    let safeChar = char;
-                    if (char === '<') {
-                        safeChar = '&lt;';
-                    } else if (char === '>') {
-                        safeChar = '&gt;';
-                    } else if (char === '&') {
-                        safeChar = '&amp;';
-                    }
-
-                    if (color !== currentSpanColor) {
-                        if (currentSpanText !== '') {
-                            rowHTML += `<tspan fill="${currentSpanColor}">${currentSpanText}</tspan>`;
-                        }
-                        currentSpanColor = color;
-                        currentSpanText = safeChar;
-                    } else {
-                        currentSpanText += safeChar;
-                    }
-                }
-                if (currentSpanText !== '') {
-                    rowHTML += `<tspan fill="${currentSpanColor}">${currentSpanText}</tspan>`;
-                }
-                rowHTML += `</text>\n`;
-                frameHTML += rowHTML;
-            }
-            frameHTML += `</g>\n`;
-            svgContent += frameHTML;
-        }
-
-        svgContent += `</svg>`;
+        const svgContent = buildAnimatedSvgContent(cfg.totalFrames);
 
         const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
