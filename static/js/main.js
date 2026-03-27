@@ -56,6 +56,7 @@ const themeToggle = document.getElementById('theme-toggle');
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('light-theme');
     themeToggle.textContent = document.body.classList.contains('light-theme') ? 'Dark Theme' : 'Light Theme';
+    updateBadgeOutput();
 });
 
 const bindInput = (id, key, isFloat = false) => {
@@ -404,12 +405,22 @@ const buildAnimatedSvgContent = (frames = cfg.totalFrames) => {
 };
 
 const updateBadgeOutput = () => {
-    const rawAltText = cfg.label.trim() || 'ASCII Badge';
-    const altText = rawAltText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-    const badgeFrames = Math.min(cfg.totalFrames, 48);
-    const svgContent = buildAnimatedSvgContent(badgeFrames);
-    const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(svgContent)}`;
-    const markdown = `<img alt="${altText}" src="${dataUri}" />`;
+    const rawAltText = cfg.label.trim() || 'Animated ASCII';
+    const altText = rawAltText.replace(/\]/g, '\\]').replace(/\[/g, '\\[');
+    const baseUrl = window.location.origin;
+    const params = new URLSearchParams({
+        profile: cfg.profile,
+        label: cfg.label,
+        theme: document.body.classList.contains('light-theme') ? 'light' : 'dark',
+        width: String(cfg.width),
+        height: String(cfg.height),
+        speedX: String(cfg.speedX),
+        speedY: String(cfg.speedY),
+        animationSpeed: String(cfg.animationSpeed),
+        chars: cfg.chars,
+        frames: String(Math.min(cfg.totalFrames, 48))
+    });
+    const markdown = `![${altText}](${baseUrl}/api/badge?${params.toString()})`;
     document.getElementById('badge-output').value = markdown;
 };
 
