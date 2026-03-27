@@ -11,12 +11,13 @@ const DEFAULTS = {
   animationSpeed: 1,
   chars: '.,-~:;=!*#$@',
   label: ' OstinUA ',
-  totalFrames: 48,
+  totalFrames: 200,
   cols: 80,
   rows: 27,
   profile: 'donut',
   theme: 'dark'
 };
+const BASE_FRAME_SECONDS = 1 / 60;
 
 const PROFILES = {
   donut: {
@@ -98,7 +99,7 @@ const createConfigFromQuery = (query = {}) => {
     speedX: clampFloat(query.speedX, DEFAULTS.speedX, -8, 8),
     speedY: clampFloat(query.speedY, DEFAULTS.speedY, -8, 8),
     animationSpeed: clampFloat(query.animationSpeed, DEFAULTS.animationSpeed, 0.1, 4),
-    totalFrames: clampInt(query.frames, DEFAULTS.totalFrames, 8, 120),
+    totalFrames: clampInt(query.frames, DEFAULTS.totalFrames, 8, 240),
     theme: query.theme === 'light' ? 'light' : 'dark',
     R1: clampFloat(query.R1, profile.R1, 0.3, 4),
     R2: clampFloat(query.R2, profile.R2, 0.5, 6),
@@ -302,8 +303,10 @@ const createRenderer = (cfg) => {
 const buildAnimatedSvgContent = (cfg) => {
   const renderer = createRenderer(cfg);
   const safeFrames = Math.max(1, cfg.totalFrames);
-  const frameStepSeconds = 0.02 / cfg.animationSpeed;
+  const frameStepSeconds = BASE_FRAME_SECONDS / cfg.animationSpeed;
   const duration = safeFrames * frameStepSeconds;
+  const frameWindowPercent = Math.min(100, 100 / safeFrames);
+  const frameHidePercent = Math.min(100, frameWindowPercent * 0.999);
   const bg = cfg.theme === 'light' ? '#f6f8fa' : '#0d1117';
   const fg = cfg.theme === 'light' ? '#24292f' : '#ccc';
 
@@ -318,8 +321,8 @@ const buildAnimatedSvgContent = (cfg) => {
       }
       .fr { opacity: 0; animation: play ${duration}s infinite; }
       @keyframes play {
-        0%, 0.499% { opacity: 1; }
-        0.5%, 100% { opacity: 0; }
+        0%, ${frameHidePercent}% { opacity: 1; }
+        ${frameWindowPercent}%, 100% { opacity: 0; }
       }
     </style>\n`;
 
