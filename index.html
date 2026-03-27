@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Transparent Looping Donut</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --accent-color: #3f88e6;
+            --panel-bg: #161b22;
+            --border-color: #30363d;
+        }
+
+        body.light-theme {
+            --bg-color: #f6f8fa;
+            --text-color: #24292f;
+            --accent-color: #0969da;
+            --panel-bg: #ffffff;
+            --border-color: #d0d7de;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: monospace;
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        #sidebar {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 5px;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+
+        /* Main Workspace Styles */
+        #workspace {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        #container {
+            position: relative;
+            border: 1px dashed var(--border-color);
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        svg {
+            display: block;
+        }
+        
+        svg text {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0px 0px 3px rgba(0,0,0,0.8);
+        }
+
+        .action-btn {
+            padding: 10px 15px;
+            background: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            cursor: pointer;
+            font-weight: bold;
+            font-family: monospace;
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .action-btn:disabled {
+            border-color: #555 !important;
+            color: #555 !important;
+            cursor: not-allowed;
+            background: transparent !important;
+        }
+
+        .section-title {
+            margin: 10px 0 0 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2 style="margin-top: 0; font-size: 16px;">Настройки анимации</h2>
+        
+        <div class="section-title">Размер холста (px)</div>
+        <div class="control-group">
+            <label>Ширина <span id="val-width">600</span></label>
+            <input type="number" id="inp-width" value="600" min="100" max="1200" step="10">
+        </div>
+        <div class="control-group">
+            <label>Высота <span id="val-height">400</span></label>
+            <input type="number" id="inp-height" value="400" min="100" max="1200" step="10">
+        </div>
+
+        <div class="section-title">Геометрия бублика</div>
+        <div class="control-group">
+            <label>Толщина трубы (R1) <span id="val-r1">1</span></label>
+            <input type="range" id="inp-r1" value="1" min="0.1" max="3" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Радиус кольца (R2) <span id="val-r2">2</span></label>
+            <input type="range" id="inp-r2" value="2" min="0.5" max="5" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Растяжение по X <span id="val-scalex">30</span></label>
+            <input type="range" id="inp-scalex" value="30" min="5" max="100" step="1">
+        </div>
+        <div class="control-group">
+            <label>Растяжение по Y <span id="val-scaley">15</span></label>
+            <input type="range" id="inp-scaley" value="15" min="5" max="100" step="1">
+        </div>
+
+        <div class="section-title">Скорость вращения (обороты)</div>
+        <div class="control-group">
+            <label>Ось X (за цикл) <span id="val-speedx">2</span></label>
+            <input type="range" id="inp-speedx" value="2" min="-5" max="5" step="1">
+        </div>
+        <div class="control-group">
+            <label>Ось Y (за цикл) <span id="val-speedy">1</span></label>
+            <input type="range" id="inp-speedy" value="1" min="-5" max="5" step="1">
+        </div>
+
+        <div class="section-title">Символы</div>
+        <div class="control-group">
+            <label>Текст по центру</label>
+            <input type="text" id="inp-label" value=" OstinUA ">
+        </div>
+        <div class="control-group">
+            <label>Палитра символов</label>
+            <input type="text" id="inp-chars" value=".,-~:;=!*#$@">
+        </div>
+
+        <div class="section-title">Экспорт</div>
+        <button id="download-svg-btn" class="action-btn">Скачать SVG</button>
+        <button id="download-gif-btn" class="action-btn">Скачать GIF</button>
+    </div>
+
+    <div id="workspace">
+        <button id="theme-toggle" class="action-btn">Светлая тема</button>
+        
+        <div id="container">
+            <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+    </div>
+
+    <script id="donut-logic">
+        // Глобальный объект конфигурации, который обновляется интерфейсом
+        const cfg = {
+            width: 600,
+            height: 400,
+            R1: 1,      // Радиус трубы
+            R2: 2,      // Радиус кольца
+            K2: 5,      // Расстояние до камеры
+            scaleX: 30, // Масштаб X
+            scaleY: 15, // Масштаб Y
+            speedX: 2,  // Количество оборотов A за цикл
+            speedY: 1,  // Количество оборотов B за цикл
+            chars: ".,-~:;=!*#$@",
+            label: " OstinUA ",
+            totalFrames: 200,
+            cols: 80,
+            rows: 27
+        };
+
+        // Логика переключения темы
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            themeToggle.textContent = document.body.classList.contains('light-theme') ? 'Темная тема' : 'Светлая тема';
+        });
+
+        // Привязка UI к конфигурации
+        const bindInput = (id, key, isFloat = false) => {
+            const el = document.getElementById(`inp-${id}`);
+            const valEl = document.getElementById(`val-${id}`);
+            el.addEventListener('input', (e) => {
+                const val = isFloat ? parseFloat(e.target.value) : parseInt(e.target.value);
+                cfg[key] = val;
+                if (valEl) valEl.textContent = val;
+                if (key === 'width' || key === 'height') {
+                    updateCanvasSize();
+                }
+            });
+        };
+
+        const bindTextInput = (id, key) => {
+            const el = document.getElementById(`inp-${id}`);
+            el.addEventListener('input', (e) => {
+                cfg[key] = e.target.value || " ";
+            });
+        };
+
+        bindInput('width', 'width');
+        bindInput('height', 'height');
+        bindInput('r1', 'R1', true);
+        bindInput('r2', 'R2', true);
+        bindInput('scalex', 'scaleX');
+        bindInput('scaley', 'scaleY');
+        bindInput('speedx', 'speedX');
+        bindInput('speedy', 'speedY');
+        bindTextInput('label', 'label');
+        bindTextInput('chars', 'chars');
+
+        let animationFrameId;
+        const canvasElement = document.getElementById('canvas');
+        let textNodes = [];
+
+        // Вычисляет количество строк и столбцов на основе размера холста
+        const updateCanvasSize = () => {
+            cfg.cols = Math.ceil(cfg.width / 7.5);
+            cfg.rows = Math.ceil(cfg.height / 15);
+            
+            canvasElement.setAttribute('width', cfg.width);
+            canvasElement.setAttribute('height', cfg.height);
+            canvasElement.setAttribute('viewBox', `0 0 ${cfg.width} ${cfg.height}`);
+            
+            setupSVGTextNodes();
+        };
+
+        // Создает теги <text> в SVG
+        const setupSVGTextNodes = () => {
+            canvasElement.innerHTML = '';
+            textNodes = [];
+            for (let i = 0; i < cfg.cols * cfg.rows; i++) {
+                const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                t.setAttribute("x", (i % cfg.cols) * 7.5 + 5);
+                t.setAttribute("y", Math.floor(i / cfg.cols) * 15 + 15);
+                t.setAttribute("fill", "#ccc");
+                t.setAttribute("font-size", "12");
+                t.setAttribute("font-family", "monospace");
+                t.textContent = " ";
+                canvasElement.appendChild(t);
+                textNodes.push(t);
+            }
+        };
+
+        // Математика кадра
+        const getFrameData = (A, B) => {
+            const b = Array(cfg.cols * cfg.rows).fill(" ");
+            const z = Array(cfg.cols * cfg.rows).fill(0);
+            
+            // Центр холста в символьных координатах
+            const centerX = Math.floor(cfg.cols / 2);
+            const centerY = Math.floor(cfg.rows / 2);
+
+            const numChars = cfg.chars.length;
+
+            for (let j = 0; j < 6.28; j += 0.07) {
+                for (let i = 0; i < 6.28; i += 0.02) {
+                    let c = Math.sin(i), d = Math.cos(j), e = Math.sin(A), f = Math.sin(j), g = Math.cos(A),
+                        h = d * cfg.R1 + cfg.R2, 
+                        D = 1 / (c * h * e + f * g + cfg.K2), 
+                        l = Math.cos(i), m = Math.cos(B), n = Math.sin(B), 
+                        t = c * h * g - f * e;
+                    
+                    let x = Math.floor(centerX + cfg.scaleX * D * (l * h * m - t * n));
+                    let y = Math.floor(centerY + cfg.scaleY * D * (l * h * n + t * m));
+                    
+                    let o = x + cfg.cols * y;
+                    let N = Math.floor(8 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n));
+                    
+                    if (y < cfg.rows && y >= 0 && x < cfg.cols && x >= 0 && D > z[o]) {
+                        z[o] = D;
+                        let charIndex = N > 0 ? Math.floor(N * (numChars / 12)) : 0;
+                        if(charIndex >= numChars) charIndex = numChars - 1;
+                        b[o] = cfg.chars[charIndex];
+                    }
+                }
+            }
+
+            // Добавляем текст по центру (он будет вращаться вместе с бубликом)
+            let labelX = Math.floor(centerX - cfg.label.length / 2 + 3 * Math.cos(B));
+            let labelY = Math.floor(centerY - 2 + 1 * Math.sin(A));
+            for(let k = 0; k < cfg.label.length; k++) {
+                let idx = labelX + k + cfg.cols * labelY;
+                if (idx >= 0 && idx < b.length) b[idx] = cfg.label[k];
+            }
+            return b;
+        };
+
+        // Главный цикл рендера для предпросмотра
+        let currentFrame = 0;
+        const renderLoop = () => {
+            // Вычисляем углы на основе текущего кадра и скоростей
+            let A = (currentFrame * Math.PI * 2 * cfg.speedX) / cfg.totalFrames;
+            let B = (currentFrame * Math.PI * 2 * cfg.speedY) / cfg.totalFrames;
+
+            const b = getFrameData(A, B);
+            
+            for (let i = 0; i < textNodes.length; i++) {
+                if (textNodes[i].textContent !== b[i]) {
+                    textNodes[i].textContent = b[i];
+                    textNodes[i].setAttribute("fill", cfg.label.includes(b[i]) && b[i] !== " " ? "var(--accent-color)" : "#ccc");
+                    textNodes[i].setAttribute("opacity", b[i] === " " ? "0" : "1");
+                }
+            }
+            
+            currentFrame = (currentFrame + 1) % cfg.totalFrames;
+            animationFrameId = requestAnimationFrame(renderLoop);
+        };
+
+        // Инициализация
+        updateCanvasSize();
+        renderLoop();
+
+        // --- ЛОГИКА ЭКСПОРТА ---
+
+        document.getElementById('download-svg-btn').onclick = () => {
+            const btn = document.getElementById('download-svg-btn');
+            const originalText = btn.textContent;
+            btn.textContent = "Создаем...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${cfg.width}" height="${cfg.height}" viewBox="0 0 ${cfg.width} ${cfg.height}">\n`;
+                
+                svgContent += `<style>
+                    text { 
+                        font-family: monospace; 
+                        font-size: 12px; 
+                        text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0px 0px 3px rgba(0,0,0,0.8);
+                    }
+                    .fr { opacity: 0; animation: play 4s infinite; }
+                    @keyframes play {
+                        0%, 0.499% { opacity: 1; }
+                        0.5%, 100% { opacity: 0; }
+                    }
+                </style>\n`;
+
+                for (let f = 0; f < cfg.totalFrames; f++) {
+                    let A = (f * Math.PI * 2 * cfg.speedX) / cfg.totalFrames;
+                    let B = (f * Math.PI * 2 * cfg.speedY) / cfg.totalFrames;
+                    const b = getFrameData(A, B);
+                    
+                    let frameHTML = `<g class="fr" style="animation-delay: ${f * 0.02}s;">\n`;
+                    
+                    for (let y = 0; y < cfg.rows; y++) {
+                        let lineChars = [];
+                        for (let x = 0; x < cfg.cols; x++) {
+                            lineChars.push(b[x + y * cfg.cols]);
+                        }
+                        
+                        let rightIndex = cfg.cols - 1;
+                        while(rightIndex >= 0 && lineChars[rightIndex] === " ") rightIndex--;
+                        
+                        if (rightIndex < 0) continue; 
+                        
+                        let rowHTML = `<text x="5" y="${y * 15 + 15}" xml:space="preserve">`;
+                        let currentSpanColor = null;
+                        let currentSpanText = "";
+                        
+                        for (let x = 0; x <= rightIndex; x++) {
+                            let char = lineChars[x];
+                            let color = (cfg.label.includes(char) && char !== " ") ? "#3f88e6" : "#ccc";
+                            
+                            let safeChar = char;
+                            if (char === '<') safeChar = '&lt;';
+                            else if (char === '>') safeChar = '&gt;';
+                            else if (char === '&') safeChar = '&amp;';
+
+                            if (color !== currentSpanColor) {
+                                if (currentSpanText !== "") {
+                                    rowHTML += `<tspan fill="${currentSpanColor}">${currentSpanText}</tspan>`;
+                                }
+                                currentSpanColor = color;
+                                currentSpanText = safeChar;
+                            } else {
+                                currentSpanText += safeChar;
+                            }
+                        }
+                        if (currentSpanText !== "") {
+                             rowHTML += `<tspan fill="${currentSpanColor}">${currentSpanText}</tspan>`;
+                        }
+                        rowHTML += `</text>\n`;
+                        frameHTML += rowHTML;
+                    }
+                    frameHTML += `</g>\n`;
+                    svgContent += frameHTML;
+                }
+                
+                svgContent += `</svg>`;
+
+                const blob = new Blob([svgContent], {type: "image/svg+xml;charset=utf-8"});
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "Custom_Donut.svg";
+                link.click();
+                URL.revokeObjectURL(url);
+
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 50);
+        };
+
+        document.getElementById('download-gif-btn').onclick = async () => {
+            const btn = document.getElementById('download-gif-btn');
+            const originalText = btn.textContent;
+            btn.textContent = "Создаем...";
+            btn.disabled = true;
+
+            const response = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
+            const workerText = await response.text();
+            const workerBlob = new Blob([workerText], {type: 'application/javascript'});
+            const workerUrl = URL.createObjectURL(workerBlob);
+
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: cfg.width,
+                height: cfg.height,
+                workerScript: workerUrl
+            });
+
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = cfg.width;
+            offCanvas.height = cfg.height;
+            const ctx = offCanvas.getContext('2d');
+            ctx.font = "12px monospace";
+            ctx.textBaseline = "top";
+
+            for (let f = 0; f < cfg.totalFrames; f++) {
+                ctx.fillStyle = document.body.classList.contains('light-theme') ? "#f6f8fa" : "#0d1117";
+                ctx.fillRect(0, 0, cfg.width, cfg.height);
+
+                let A = (f * Math.PI * 2 * cfg.speedX) / cfg.totalFrames;
+                let B = (f * Math.PI * 2 * cfg.speedY) / cfg.totalFrames;
+                const b = getFrameData(A, B);
+
+                ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+                ctx.shadowBlur = 3;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+
+                for (let i = 0; i < cfg.cols * cfg.rows; i++) {
+                    if (b[i] !== " ") {
+                        let x = (i % cfg.cols) * 7.5 + 5;
+                        let y = Math.floor(i / cfg.cols) * 15 + 15;
+                        ctx.fillStyle = cfg.label.includes(b[i]) ? "#3f88e6" : "#ccc";
+                        ctx.fillText(b[i], x, y);
+                    }
+                }
+                
+                gif.addFrame(offCanvas, {copy: true, delay: 20}); 
+            }
+
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "Custom_Donut.gif";
+                link.click();
+                
+                URL.revokeObjectURL(url);
+                URL.revokeObjectURL(workerUrl);
+                btn.textContent = originalText;
+                btn.disabled = false;
+            });
+
+            gif.render();
+        };
+    </script>
+</body>
+</html>
