@@ -321,9 +321,12 @@ const getFrameData = (A, B) => {
 };
 
 const buildAnimatedSvgContent = (frames = cfg.totalFrames) => {
-    const safeFrames = Math.max(1, frames);
-    const frameStepSeconds = BASE_FRAME_SECONDS / cfg.animationSpeed;
-    const duration = safeFrames * frameStepSeconds;
+    const baseFrames = Math.max(1, frames);
+    const maxAxisSpeed = Math.max(Math.abs(cfg.speedX), Math.abs(cfg.speedY));
+    const oversample = Math.min(4, Math.max(1, Math.ceil(maxAxisSpeed)));
+    const safeFrames = baseFrames * oversample;
+    const duration = baseFrames * (BASE_FRAME_SECONDS / cfg.animationSpeed);
+    const frameStepSeconds = duration / safeFrames;
     const frameWindowPercent = Math.min(100, 100 / safeFrames);
     const frameHidePercent = Math.min(100, frameWindowPercent * 0.999);
     const isLight = document.body.classList.contains('light-theme');
