@@ -323,9 +323,13 @@ const buildAnimatedSvgContent = (frames = cfg.totalFrames) => {
     const safeFrames = Math.max(1, frames);
     const frameStepSeconds = 0.02 / cfg.animationSpeed;
     const duration = safeFrames * frameStepSeconds;
+    const isLight = document.body.classList.contains('light-theme');
+    const bg = isLight ? '#f6f8fa' : '#0d1117';
+    const fg = isLight ? '#24292f' : '#ccc';
     let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${cfg.width}" height="${cfg.height}" viewBox="0 0 ${cfg.width} ${cfg.height}">\n`;
 
     svgContent += `<style>
+            svg { background: ${bg}; }
             text {
                 font-family: monospace;
                 font-size: 12px;
@@ -366,7 +370,7 @@ const buildAnimatedSvgContent = (frames = cfg.totalFrames) => {
 
             for (let x = 0; x <= rightIndex; x++) {
                 const char = lineChars[x];
-                const color = cfg.label.includes(char) && char !== ' ' ? '#3f88e6' : '#ccc';
+                const color = cfg.label.includes(char) && char !== ' ' ? '#3f88e6' : fg;
 
                 let safeChar = char;
                 if (char === '<') {
@@ -414,6 +418,11 @@ const updateBadgeOutput = () => {
         theme: document.body.classList.contains('light-theme') ? 'light' : 'dark',
         width: String(cfg.width),
         height: String(cfg.height),
+        R1: String(cfg.R1),
+        R2: String(cfg.R2),
+        K2: String(cfg.K2),
+        scaleX: String(cfg.scaleX),
+        scaleY: String(cfg.scaleY),
         speedX: String(cfg.speedX),
         speedY: String(cfg.speedY),
         animationSpeed: String(cfg.animationSpeed),
